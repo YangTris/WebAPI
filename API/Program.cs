@@ -71,7 +71,7 @@ using (var scope = app.Services.CreateScope())
     {
         if (!await roleManager.RoleExistsAsync(role))
         {
-            await roleManager.CreateAsync(n ew IdentityRole(role));
+            await roleManager.CreateAsync(new IdentityRole(role));
         }
     }
 }
