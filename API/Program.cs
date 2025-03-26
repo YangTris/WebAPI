@@ -1,6 +1,12 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Infrastructure;
+using Google.Apis.Auth.AspNetCore3;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,9 +22,19 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<ApplicationDbContext>(
     options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddAuthorization();
 builder.Services.AddIdentityApiEndpoints<IdentityUser>()
+    .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
+
+builder.Services.AddAuthorization();
+
+builder.Services.AddAuthentication().AddGoogle(options =>
+        {
+            options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
+            options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+            //options.CallbackPath = "/signin-google";
+        });
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -34,10 +50,18 @@ if (app.Environment.IsDevelopment())
 
 app.MapIdentityApi<IdentityUser>();
 
+app.UseRouting();
+
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+//app.MapGet("/api/account/login/google", ([FromQuery] string returnUrl, LinkGenerator linkGenerator, SignInManager<User> SignInManager, HttpContext context ) =>
+//{
+
+//});
 
 app.Run();
