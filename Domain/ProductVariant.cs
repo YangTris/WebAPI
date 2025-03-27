@@ -6,13 +6,13 @@ namespace Domain
     public class ProductVariant
     {
         [Key]
-        public int ProductVariantId { get; set; }
+        public string ProductVariantId { get; set; }
         public string Color { get; set; }
         public string Size { get; set; }
         public decimal Price { get; set; }
         public int StockQuantity { get; set; }
         [ForeignKey("Product")]
-        public int ProductId { get; set; }
+        public string ProductId { get; set; }
         public virtual Product Product { get; set; }
     }
 }
