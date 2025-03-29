@@ -7,6 +7,9 @@ using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Domain;
+using Application.Interfaces;
+using Application.Services;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,8 +23,30 @@ builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddDbContext<ApplicationDbContext>(
-    options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContext<ApplicationDbContext>( options => 
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+            .UseSeeding((context, _) =>
+            {
+                //var userManager = context.GetService<UserManager<IdentityUser>>();
+                //var roleManager = context.GetService<RoleManager<IdentityRole>>();
+                
+                if (context.Set<IdentityRole>().FirstOrDefault(r => r.NormalizedName == "Admin") == null)
+                {
+                    context.Set<IdentityRole>().Add(new IdentityRole("Admin"));
+                    context.SaveChanges();
+                }
+
+                if (context.Set<IdentityUser>().FirstOrDefault(r => r.Email == "admin@gmail.com") == null)
+                {
+                    context.Set<IdentityUser>().Add(new IdentityUser { UserName = "admin@gmail.com", Email = "admin@gmail.com" });
+                    context.SaveChanges();
+
+                    //await userManager.CreateAsync(adminUser, "P@ssw0rd");
+                    //await userManager.AddToRoleAsync(adminUser, "Admin");
+                }
+            });
+});
 
 //builder.Services.AddIdentityApiEndpoints<IdentityUser>()
 //    .AddRoles<IdentityRole>()
@@ -39,6 +64,8 @@ builder.Services.AddAuthentication().AddGoogle(options =>
             options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
             //options.CallbackPath = "/signin-google";
         });
+
+builder.Services.AddScoped<IProductService,ProductService >();
 
 var app = builder.Build();
 
