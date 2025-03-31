@@ -10,6 +10,7 @@ using Domain;
 using Application.Interfaces;
 using Application.Services;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,34 +24,100 @@ builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddDbContext<ApplicationDbContext>( options => 
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
-            .UseSeeding((context, _) =>
-            {
-                //var userManager = context.GetService<UserManager<IdentityUser>>();
-                //var roleManager = context.GetService<RoleManager<IdentityRole>>();
-                
-                if (context.Set<IdentityRole>().FirstOrDefault(r => r.NormalizedName == "Admin") == null)
-                {
-                    context.Set<IdentityRole>().Add(new IdentityRole("Admin"));
-                    context.SaveChanges();
-                }
+           .UseSeeding((context, _) =>
+           {
+               // Resolve RoleManager and UserManager from the service provider
+               var roleManager = context.GetService<RoleManager<IdentityRole>>();
+               var userManager = context.GetService<UserManager<User>>();
 
-                if (context.Set<IdentityUser>().FirstOrDefault(r => r.Email == "admin@gmail.com") == null)
-                {
-                    context.Set<IdentityUser>().Add(new IdentityUser { UserName = "admin@gmail.com", Email = "admin@gmail.com" });
-                    context.SaveChanges();
+               // Seed roles if none exist
+               if (!context.Set<IdentityRole>().Any())
+               {
+                   var roles = new[] { "Admin", "Staff", "Customer" };
+                   foreach (var role in roles)
+                   {
+                       roleManager.CreateAsync(new IdentityRole(role)).GetAwaiter().GetResult();
+                   }
+                   context.SaveChanges();
+               }
 
-                    //await userManager.CreateAsync(adminUser, "P@ssw0rd");
-                    //await userManager.AddToRoleAsync(adminUser, "Admin");
-                }
-            });
+               // Seed users with roles if none exist
+               if (!context.Set<User>().Any())
+               {
+                   var usersWithRoles = new[]
+                   {
+                       new { Email = "admin@gmail.com", Role = "admin" },
+                       new { Email = "customer@gmail.com", Role = "customer" }
+                   };
+
+                   var hasher = new PasswordHasher<User>();
+                   foreach (var userInfo in usersWithRoles)
+                   {
+                       var user = new User
+                       {
+                           Email = userInfo.Email,
+                           UserName = userInfo.Email,
+                           PasswordHash = hasher.HashPassword(null, "P@ssword")
+                       };
+
+                       // Create the user
+                       context.Set<User>().Add(user);
+                       context.SaveChanges();
+
+                       // Assign the role to the user
+                       userManager.AddToRoleAsync(user, userInfo.Role).GetAwaiter().GetResult();
+                   }
+               }
+           })
+           .UseAsyncSeeding(async (context, _, cancellationToken) =>
+           {
+               // Resolve RoleManager and UserManager from the service provider
+               var roleManager = context.GetService<RoleManager<IdentityRole>>();
+               var userManager = context.GetService<UserManager<User>>();
+
+               // Seed roles if none exist (async)
+               if (!await context.Set<IdentityRole>().AnyAsync(cancellationToken))
+               {
+                   var roles = new[] { "Admin", "Staff", "Customer" };
+                   foreach (var role in roles)
+                   {
+                       await roleManager.CreateAsync(new IdentityRole(role));
+                   }
+                   await context.SaveChangesAsync(cancellationToken);
+               }
+
+               // Seed users with roles if none exist (async)
+               if (!await context.Set<User>().AnyAsync(cancellationToken))
+               {
+                   var usersWithRoles = new[]
+                   {
+                       new { Email = "admin@gmail.com", Role = "admin" },
+                       new { Email = "customer@gmail.com", Role = "customer" }
+                   };
+
+                   var hasher = new PasswordHasher<User>();
+                   foreach (var userInfo in usersWithRoles)
+                   {
+                       var user = new User
+                       {
+                           Email = userInfo.Email,
+                           UserName = userInfo.Email,
+                           PasswordHash = hasher.HashPassword(null, "P@ssword")
+                       };
+
+                       // Create the user
+                       context.Set<User>().Add(user);
+                       await context.SaveChangesAsync(cancellationToken);
+
+                       // Assign the role to the user
+                       await userManager.AddToRoleAsync(user, userInfo.Role);
+                   }
+               }
+           });
 });
-
-//builder.Services.AddIdentityApiEndpoints<IdentityUser>()
-//    .AddRoles<IdentityRole>()
-//    .AddEntityFrameworkStores<ApplicationDbContext>();
 
 builder.Services.AddIdentityApiEndpoints<User>()
     .AddRoles<IdentityRole>()
@@ -80,11 +147,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.MapIdentityApi<IdentityUser>();
+app.MapIdentityApi<User>();
 
 app.UseRouting();
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -93,19 +161,5 @@ app.MapControllers();
 
 //app.MapGet("/api/account/login/google", ([FromQuery] string returnUrl, LinkGenerator linkGenerator, SignInManager<User> SignInManager, HttpContext context ) =>
 //{
-
-//});
-using (var scope = app.Services.CreateScope())
-{
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    var roles= new[] { "Admin", "User" };
-    foreach (var role in roles)
-    {
-        if (!await roleManager.RoleExistsAsync(role))
-        {
-            await roleManager.CreateAsync(new IdentityRole(role));
-        }
-    }
-}
 
 app.Run();
