@@ -11,5 +11,8 @@ namespace Application.Interfaces
     {
         Task<Product> CreateProductAsync(Product product);
         Task<Product> GetProductByIdAsync(string id);
+        Task<IEnumerable<Product>> GetAllProduct();
+        Task UpdateProductAsync(Product product);
+        Task DeleteProductAsync(string id);
     }
 }
