@@ -17,16 +17,21 @@ namespace Infrastructure.Migrations
                 columns: new[] { "CategoryId", "Name" },
                 values: new object[,]
                 {
-                    { 1, "Shirt" },
-                    { 2, "Coat" },
-                    { 3, "Pant" },
-                    { 4, "Sportswear" }
+                    { 0, "Shirt" },
+                    { 1, "Coat" },
+                    { 2, "Pant" },
+                    { 3, "Sportswear" }
                 });
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DeleteData(
+                table: "Categories",
+                keyColumn: "CategoryId",
+                keyValue: 0);
+
             migrationBuilder.DeleteData(
                 table: "Categories",
                 keyColumn: "CategoryId",
@@ -41,11 +46,6 @@ namespace Infrastructure.Migrations
                 table: "Categories",
                 keyColumn: "CategoryId",
                 keyValue: 3);
-
-            migrationBuilder.DeleteData(
-                table: "Categories",
-                keyColumn: "CategoryId",
-                keyValue: 4);
         }
     }
 }
