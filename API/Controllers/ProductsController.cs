@@ -56,48 +56,5 @@ namespace API.Controllers
             
             return Ok(ProductToDTO(product)); //return code 200
         }
-
-        [HttpGet]
-        public async Task<IActionResult> GetAllProduct()
-        {
-            var products = await _productService.GetAllProduct();
-            return Ok(products.Select(ProductToDTO)); //return code 200
-        }
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteProduct(string id)
-        {
-            var product = _productService.GetProductByIdAsync(id);
-            if (product == null)
-            {
-                return NotFound();
-            }
-            return NoContent(); //return code 204
-        }
-
-        [HttpPut]
-        public async Task<IActionResult> UpdateProductById(string id, [FromBody] ProductDTO productDTO)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-            var existingProduct = await _productService.GetProductByIdAsync(id);
-            if (existingProduct == null)
-            {
-                return NotFound();
-            }
-            var product = new Product
-            {
-                ProductId = id,
-                Name = productDTO.Name,
-                Description = productDTO.Description,
-                CategoryId = productDTO.CategoryId,
-            };
-            await _productService.UpdateProductAsync(product);
-
-            return NoContent(); //return code 204
-        }
-
     }
 }

@@ -7,9 +7,9 @@ using Domain;
 
 namespace Application.Interfaces
 {
-    public interface IProductService
+    public interface ICategoryService
     {
-        Task<Product> CreateProductAsync(Product product);
-        Task<Product> GetProductByIdAsync(string id);
+        Task<Category> GetCategoryAsAsync(int id);
+        Task<IEnumerable<Category>> GetCategoriesAsync();
     }
 }

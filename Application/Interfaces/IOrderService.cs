@@ -3,13 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Domain;
 
 namespace Application.Interfaces
 {
-    public interface IProductService
+    public interface IOrderService
     {
-        Task<Product> CreateProductAsync(Product product);
-        Task<Product> GetProductByIdAsync(string id);
     }
 }

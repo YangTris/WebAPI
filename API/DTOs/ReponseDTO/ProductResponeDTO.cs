@@ -1,4 +1,6 @@
-﻿namespace API.DTOs.ReponseDTO
+﻿using Domain;
+
+namespace API.DTOs.ReponseDTO
 {
     public class ProductResponeDTO
     {
