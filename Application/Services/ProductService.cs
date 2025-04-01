@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Application.Interfaces;
 using Domain;
 using Infrastructure;
+using Microsoft.EntityFrameworkCore;
 
 namespace Application.Services
 {
@@ -28,5 +29,27 @@ namespace Application.Services
            return await _context.Products.FindAsync(id);
         }
 
+        public async Task DeleteProductAsync(string id)
+        {
+            var product = await GetProductByIdAsync(id);
+            if (product != null)
+            {
+                _context.Products.Remove(product);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task<IEnumerable<Product>> GetAllProduct()
+        {
+            return await _context.Products.ToListAsync();
+        }
+
+        public async Task UpdateProductAsync(Product product)
+        {
+            var existingProduct = await GetProductByIdAsync(product.ProductId);
+            _context.Entry(existingProduct).CurrentValues.SetValues(product);
+            await _context.SaveChangesAsync();
+
+        }
     }
 }
