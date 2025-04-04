@@ -43,7 +43,7 @@ namespace API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult> GetAllProduct()
+        public async Task<ActionResult> GetAll()
         {
             var products = await _productService.GetAllProductAsAsync();
             return Ok(products); //return code 200
