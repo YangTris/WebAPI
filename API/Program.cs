@@ -11,11 +11,20 @@ using Application.Interfaces;
 using Application.Services;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
+using Infrastructure.Repositories;
+using Domain.IRepositories;
 
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
+//AddScoped Repositories
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+
+//AddScoped Services
+builder.Services.AddScoped<IProductService, ProductService>();
+
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -131,8 +140,6 @@ builder.Services.AddAuthentication().AddGoogle(options =>
             options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
             //options.CallbackPath = "/signin-google";
         });
-
-builder.Services.AddScoped<IProductService,ProductService >();
 
 var app = builder.Build();
 

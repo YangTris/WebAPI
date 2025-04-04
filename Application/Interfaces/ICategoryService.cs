@@ -9,7 +9,10 @@ namespace Application.Interfaces
 {
     public interface ICategoryService
     {
-        Task<Category> GetCategoryAsAsync(int id);
-        Task<IEnumerable<Category>> GetCategoriesAsync();
+        Task<Category> GetCategoryByIdAsync(int id);
+        Task<IEnumerable<Category>> GetAllCategory();
+        Task<Category> CreateCategoryAsync(Category category);
+        Task UpdateCategoryAsync(Category category);
+        Task DeleteCategoryAsync(int id);
     }
 }

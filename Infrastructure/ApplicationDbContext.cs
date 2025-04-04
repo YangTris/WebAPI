@@ -33,7 +33,7 @@ namespace Infrastructure
             base.OnModelCreating(modelBuilder);
             
             modelBuilder.Entity<Category>().HasData(
-                new Category { CategoryId = 1, Name = "Shirt" },
+                new Category { CategoryId = 1, Name = "Shirt"},
                 new Category { CategoryId = 2, Name = "Coat" },
                 new Category { CategoryId = 3, Name = "Pant" },
                 new Category { CategoryId = 4, Name = "Sportswear" }

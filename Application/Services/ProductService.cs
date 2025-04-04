@@ -3,53 +3,111 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Application.Dtos;
 using Application.Interfaces;
 using Domain;
-using Infrastructure;
+using Domain.IRepositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace Application.Services
 {
     public class ProductService : IProductService
     {
-        private readonly ApplicationDbContext _context;
-        public ProductService(ApplicationDbContext context)
+        private readonly IProductRepository _productRepository;
+        public ProductService(IProductRepository productRepository) 
         {
-            _context = context;
-        }
-        public async Task<Product> CreateProductAsync(Product product)
-        {
-            await _context.Products.AddAsync(product);
-            await _context.SaveChangesAsync();
-            return product;
+            _productRepository = productRepository;
         }
 
-        public async Task<Product> GetProductByIdAsync(string id)
+        private ProductDto MapToDto(Product product)
         {
-           return await _context.Products.FindAsync(id);
+            if (product == null) return null;
+
+            return new ProductDto
+            {
+                ProductId = product.ProductId,
+                Name = product.Name,
+                Description = product.Description,
+                CategoryId = product.CategoryId,
+                Category =  new CategoryDto
+                {
+                    CategoryId = product.CategoryId,
+                    Name = product.Category.Name,
+                } ,
+                ProductVariants = product.ProductVariants.Select(pv => new ProductVariantDto
+                {
+                    ProductVariantId = pv.ProductVariantId,
+                    Color = pv.Color,
+                    Size = pv.Size,
+                    Price = pv.Price,
+                    StockQuantity = pv.StockQuantity
+                }).ToList() ?? new List<ProductVariantDto>()
+            };
+        }
+
+        public async Task<ProductDto> CreateProductAsync(ProductDto productDto)
+        {
+            var product= new Product
+            {
+                ProductId = Guid.NewGuid().ToString(),
+                Name = productDto.Name,
+                Description = productDto.Description,
+                CategoryId = productDto.CategoryId,
+                Category= new Category
+                {
+                    CategoryId = productDto.CategoryId,
+                    Name = productDto.Category.Name,
+                },
+                ProductVariants = productDto.ProductVariants.Select(pv => new ProductVariant
+                {
+                    Color = pv.Color,
+                    Size = pv.Size,
+                    Price = pv.Price,
+                    StockQuantity = pv.StockQuantity
+                }).ToList()
+            };
+            foreach(var variant in product.ProductVariants)
+            {
+                variant.ProductVariantId = Guid.NewGuid().ToString();
+                variant.ProductId = product.ProductId;
+            }
+            await _productRepository.AddAsync(product);
+            return MapToDto(product);
         }
 
         public async Task DeleteProductAsync(string id)
         {
-            var product = await GetProductByIdAsync(id);
-            if (product != null)
+            await _productRepository.DeleteAsync(id);
+        }
+
+        public async Task<IEnumerable<ProductDto>> GetAllProductAsAsync()
+        {
+            var products = await _productRepository.GetAllAsync();
+            return products.Select(MapToDto).ToList();
+        }
+
+        public async Task<ProductDto> GetProductByIdAsync(string id)
+        {
+            var product = await _productRepository.GetByIdAsync(id);
+            if (product == null)
             {
-                _context.Products.Remove(product);
-                await _context.SaveChangesAsync();
+                return null;
             }
+            return MapToDto(product);
         }
 
-        public async Task<IEnumerable<Product>> GetAllProduct()
+        public async Task UpdateProductAsync(string id, UpdateProductDto product)
         {
-            return await _context.Products.ToListAsync();
-        }
+            var existingProduct = await _productRepository.GetByIdAsync(id);
+            if (existingProduct == null)
+            {
+                throw new Exception("Product not found");
+            }
+            existingProduct.Name = product.Name;
+            existingProduct.Description = product.Description;
+            existingProduct.CategoryId = product.CategoryId;
 
-        public async Task UpdateProductAsync(Product product)
-        {
-            var existingProduct = await GetProductByIdAsync(product.ProductId);
-            _context.Entry(existingProduct).CurrentValues.SetValues(product);
-            await _context.SaveChangesAsync();
-
+            await _productRepository.UpdateAsync(existingProduct);
         }
     }
 }
