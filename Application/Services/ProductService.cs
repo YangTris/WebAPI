@@ -29,11 +29,6 @@ namespace Application.Services
                 Name = product.Name,
                 Description = product.Description,
                 CategoryId = product.CategoryId,
-                Category =  new CategoryDto
-                {
-                    CategoryId = product.CategoryId,
-                    Name = product.Category.Name,
-                } ,
                 ProductVariants = product.ProductVariants.Select(pv => new ProductVariantDto
                 {
                     ProductVariantId = pv.ProductVariantId,
@@ -53,11 +48,6 @@ namespace Application.Services
                 Name = productDto.Name,
                 Description = productDto.Description,
                 CategoryId = productDto.CategoryId,
-                Category= new Category
-                {
-                    CategoryId = productDto.CategoryId,
-                    Name = productDto.Category.Name,
-                },
                 ProductVariants = productDto.ProductVariants.Select(pv => new ProductVariant
                 {
                     Color = pv.Color,

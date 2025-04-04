@@ -14,7 +14,6 @@ namespace Application.Dtos
         public string Name { get; set; }
         public string Description { get; set; }
         public int CategoryId { get; set; }
-        public CategoryDto Category { get; set; }
         public List<ProductVariantDto> ProductVariants { get; set; }
     }
 }
