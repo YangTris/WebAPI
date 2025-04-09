@@ -69,7 +69,7 @@ namespace API.Controllers
                 return BadRequest(ModelState);
             }
 
-            var product = _productService.GetProductByIdAsync(id);
+            var product = await _productService.GetProductByIdAsync(id);
             if (product == null)
             {
                 return NotFound();
